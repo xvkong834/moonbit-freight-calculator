@@ -1,0 +1,132 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "PaiGack/moonbit-freight-calculator"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn billable_weight_g(ParcelDim, Int) -> Int
+
+pub fn billing_rule(volumetric_divisor~ : Int, first_weight_limit_g~ : Int, first_weight_rate~ : Money, additional_weight_unit_g~ : Int, additional_weight_rate~ : Money, min_charge~ : Money, zones~ : Array[ZoneRate], surcharge~ : SurchargePolicy) -> BillingRule
+
+pub fn describe_line(ChargeLine) -> String
+
+pub fn parcel_dim(width_cm~ : Int, height_cm~ : Int, depth_cm~ : Int, weight_g~ : Int) -> ParcelDim
+
+pub fn quote(BillingRule, ParcelDim, String, Money) -> Quote
+
+pub fn quote_manifest(BillingRule, Array[ManifestItem]) -> ManifestQuote
+
+pub fn sample_manifest() -> Array[ManifestItem]
+
+pub fn standard_rule() -> BillingRule
+
+pub fn surcharge_policy(overweight_limit_g~ : Int, overweight_fee~ : Money, oversize_limit_cm~ : Int, oversize_fee~ : Money, fuel_percent_bp~ : Int, insurance_percent_bp~ : Int) -> SurchargePolicy
+
+pub fn validate_rule(BillingRule) -> Array[RuleProblem]
+
+pub fn volumetric_weight_g(ParcelDim, Int) -> Int
+
+pub fn zone_rate(zone~ : String, multiplier_bp~ : Int, remote_fee~ : Money) -> ZoneRate
+
+// Errors
+
+// Types and methods
+pub struct BillingRule {
+  volumetric_divisor : Int
+  first_weight_limit_g : Int
+  first_weight_rate : Money
+  additional_weight_unit_g : Int
+  additional_weight_rate : Money
+  min_charge : Money
+  zones : Array[ZoneRate]
+  surcharge : SurchargePolicy
+} derive(Eq, ToJson, @debug.Debug)
+pub fn BillingRule::zone_rate(Self, String) -> ZoneRate
+
+pub enum ChargeLine {
+  Base(weight_g~ : Int, Money)
+  Additional(units~ : Int, Money)
+  Zone(zone~ : String, multiplier_bp~ : Int, Money)
+  Remote(zone~ : String, Money)
+  Overweight(limit_g~ : Int, Money)
+  Oversize(limit_cm~ : Int, Money)
+  Fuel(percent_bp~ : Int, Money)
+  Insurance(percent_bp~ : Int, declared_value~ : Money, Money)
+  Minimum(Money)
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct ManifestItem {
+  tracking_no : String
+  zone : String
+  parcel : ParcelDim
+  declared_value : Money
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct ManifestQuote {
+  items : Array[Quote]
+  total : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ManifestQuote::summary(Self) -> String
+
+pub struct Money {
+  cents : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Money::add(Self, Self) -> Self
+pub fn Money::from_cents(Int) -> Self
+pub fn Money::max(Self, Self) -> Self
+pub fn Money::mul_int(Self, Int) -> Self
+pub fn Money::percent_bp(Self, Int) -> Self
+pub fn Money::scale_bp(Self, Int) -> Self
+pub fn Money::sub(Self, Self) -> Self
+pub fn Money::to_string(Self) -> String
+pub fn Money::yuan(Int) -> Self
+pub fn Money::zero() -> Self
+
+pub struct ParcelDim {
+  width_cm : Int
+  height_cm : Int
+  depth_cm : Int
+  weight_g : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ParcelDim::longest_side_cm(Self) -> Int
+pub fn ParcelDim::volume_cm3(Self) -> Int
+
+pub struct Quote {
+  billable_weight_g : Int
+  actual_weight_g : Int
+  volumetric_weight_g : Int
+  subtotal : Money
+  total : Money
+  lines : Array[ChargeLine]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Quote::summary(Self) -> String
+
+pub enum RuleProblem {
+  NonPositiveDivisor
+  NonPositiveWeightStep
+  EmptyZones
+  InvalidZoneMultiplier(String)
+  NegativeFee(String)
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct SurchargePolicy {
+  overweight_limit_g : Int
+  overweight_fee : Money
+  oversize_limit_cm : Int
+  oversize_fee : Money
+  fuel_percent_bp : Int
+  insurance_percent_bp : Int
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct ZoneRate {
+  zone : String
+  multiplier_bp : Int
+  remote_fee : Money
+} derive(Eq, ToJson, @debug.Debug)
+
+// Type aliases
+
+// Traits
+
