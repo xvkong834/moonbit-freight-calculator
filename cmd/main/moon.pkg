@@ -1,0 +1,5 @@
+import {
+  "PaiGack/moonbit-freight-calculator" @freight,
+}
+
+pkgtype(kind: "executable")
