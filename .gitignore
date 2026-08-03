@@ -1,0 +1,6 @@
+/_build/
+/.mooncakes/
+/.moonbit/
+/_probe_project/
+*.wasm
+*.js
