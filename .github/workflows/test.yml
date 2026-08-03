@@ -1,0 +1,59 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Setup MoonBit (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+          irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
+          echo "$HOME/.moon/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Setup native compiler (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-gcc
+
+      - name: Setup native compiler (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          xcode-select -p || sudo xcode-select --install
+
+      - name: Check
+        run: |
+          moon fmt --check
+          moon check --deny-warn
+          moon info
+          git diff --exit-code
+
+      - name: Test
+        run: |
+          moon test --deny-warn
+          moon test --deny-warn --target native
