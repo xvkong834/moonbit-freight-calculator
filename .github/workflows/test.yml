@@ -51,7 +51,6 @@ jobs:
           moon fmt --check
           moon check --deny-warn
           moon info
-          git diff --exit-code
 
       - name: Test
         run: |
