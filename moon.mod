@@ -1,4 +1,4 @@
-name = "PaiGack/moonbit-freight-calculator"
+name = "lyyjavastudy/moonbit-freight-calculator"
 
 version = "0.1.0"
 

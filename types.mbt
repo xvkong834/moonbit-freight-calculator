@@ -76,3 +76,79 @@ pub struct ManifestQuote {
   items : Array[Quote]
   total : Money
 } derive(Debug, Eq, ToJson)
+
+///|
+pub(all) enum RoundingMode {
+  HalfUp
+  HalfDown
+  Floor
+  Ceiling
+} derive(Debug, Eq, ToJson)
+
+///|
+pub struct ParcelProfile {
+  longest_side_cm : Int
+  shortest_side_cm : Int
+  middle_side_cm : Int
+  girth_cm : Int
+  footprint_cm2 : Int
+  surface_area_cm2 : Int
+  density_g_per_l : Int
+} derive(Debug, Eq, ToJson)
+
+///|
+pub struct DiscountRule {
+  code : String
+  percent_bp : Int
+  cap : Money
+} derive(Debug, Eq, ToJson)
+
+///|
+pub struct DiscountResult {
+  original : Money
+  discount : Money
+  payable : Money
+  applied : Array[String]
+} derive(Debug, Eq, ToJson)
+
+///|
+pub struct TaxPolicy {
+  rate_bp : Int
+  threshold : Money
+} derive(Debug, Eq, ToJson)
+
+///|
+pub struct TaxResult {
+  taxable : Money
+  exempt : Money
+  tax : Money
+  gross : Money
+} derive(Debug, Eq, ToJson)
+
+///|
+pub struct Lane {
+  origin : String
+  destination : String
+  zone : String
+  transit_days : Int
+} derive(Debug, Eq, ToJson)
+
+///|
+pub struct ManifestSummary {
+  count : Int
+  total_weight_g : Int
+  average_weight_g : Int
+  max_weight_g : Int
+  min_weight_g : Int
+  outlier_count : Int
+} derive(Debug, Eq, ToJson)
+
+///|
+pub struct OperationalRate {
+  code : String
+  zone : String
+  minimum_g : Int
+  maximum_g : Int
+  rate : Money
+  multiplier_bp : Int
+} derive(Debug, Eq, ToJson)

@@ -1,16 +1,34 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "PaiGack/moonbit-freight-calculator"
+package "lyyjavastudy/moonbit-freight-calculator"
 
 import {
   "moonbitlang/core/debug",
 }
 
 // Values
+pub fn analyze_parcel(ParcelDim) -> ParcelProfile
+
+pub fn apply_discounts(Money, Array[DiscountRule]) -> DiscountResult
+
 pub fn billable_weight_g(ParcelDim, Int) -> Int
 
 pub fn billing_rule(volumetric_divisor~ : Int, first_weight_limit_g~ : Int, first_weight_rate~ : Money, additional_weight_unit_g~ : Int, additional_weight_rate~ : Money, min_charge~ : Money, zones~ : Array[ZoneRate], surcharge~ : SurchargePolicy) -> BillingRule
 
+pub fn calculate_tax(TaxPolicy, Money, Money) -> TaxResult
+
+pub fn combine_discount_rules(Array[Array[DiscountRule]]) -> Array[DiscountRule]
+
 pub fn describe_line(ChargeLine) -> String
+
+pub fn discount_rule(code~ : String, percent_bp~ : Int, cap~ : Money) -> DiscountRule
+
+pub fn domestic_rate_catalog() -> Array[OperationalRate]
+
+pub fn find_operational_rate(Array[OperationalRate], Int) -> OperationalRate
+
+pub fn international_rate_catalog() -> Array[OperationalRate]
+
+pub fn lane(origin~ : String, destination~ : String, zone~ : String, transit_days~ : Int) -> Lane
 
 pub fn parcel_dim(width_cm~ : Int, height_cm~ : Int, depth_cm~ : Int, weight_g~ : Int) -> ParcelDim
 
@@ -18,11 +36,23 @@ pub fn quote(BillingRule, ParcelDim, String, Money) -> Quote
 
 pub fn quote_manifest(BillingRule, Array[ManifestItem]) -> ManifestQuote
 
+pub fn regional_rate_catalog() -> Array[OperationalRate]
+
+pub fn resolve_lane(Array[Lane], String, String) -> Lane
+
+pub fn returns_rate_catalog() -> Array[OperationalRate]
+
 pub fn sample_manifest() -> Array[ManifestItem]
+
+pub fn select_fastest_lane(Array[Lane], String, String) -> Lane
 
 pub fn standard_rule() -> BillingRule
 
+pub fn summarize_manifest(Array[ParcelDim]) -> ManifestSummary
+
 pub fn surcharge_policy(overweight_limit_g~ : Int, overweight_fee~ : Money, oversize_limit_cm~ : Int, oversize_fee~ : Money, fuel_percent_bp~ : Int, insurance_percent_bp~ : Int) -> SurchargePolicy
+
+pub fn tax_policy(rate_bp~ : Int, threshold~ : Money) -> TaxPolicy
 
 pub fn validate_rule(BillingRule) -> Array[RuleProblem]
 
@@ -57,6 +87,30 @@ pub enum ChargeLine {
   Minimum(Money)
 } derive(Eq, ToJson, @debug.Debug)
 
+pub struct DiscountResult {
+  original : Money
+  discount : Money
+  payable : Money
+  applied : Array[String]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn DiscountResult::effective_rate_bp(Self) -> Int
+
+pub struct DiscountRule {
+  code : String
+  percent_bp : Int
+  cap : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn DiscountRule::valid(Self) -> Bool
+
+pub struct Lane {
+  origin : String
+  destination : String
+  zone : String
+  transit_days : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Lane::is_valid(Self) -> Bool
+pub fn Lane::key(Self) -> String
+
 pub struct ManifestItem {
   tracking_no : String
   zone : String
@@ -70,19 +124,52 @@ pub struct ManifestQuote {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn ManifestQuote::summary(Self) -> String
 
+pub struct ManifestSummary {
+  count : Int
+  total_weight_g : Int
+  average_weight_g : Int
+  max_weight_g : Int
+  min_weight_g : Int
+  outlier_count : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ManifestSummary::average_kg(Self) -> Int
+pub fn ManifestSummary::is_empty(Self) -> Bool
+pub fn ManifestSummary::weight_range(Self) -> Int
+
 pub struct Money {
   cents : Int
 } derive(Eq, ToJson, @debug.Debug)
+pub fn Money::abs(Self) -> Self
 pub fn Money::add(Self, Self) -> Self
+pub fn Money::clamp(Self, Self, Self) -> Self
+pub fn Money::difference(Self, Self) -> Self
 pub fn Money::from_cents(Int) -> Self
+pub fn Money::is_negative(Self) -> Bool
+pub fn Money::is_positive(Self) -> Bool
+pub fn Money::is_zero(Self) -> Bool
 pub fn Money::max(Self, Self) -> Self
+pub fn Money::min(Self, Self) -> Self
 pub fn Money::mul_int(Self, Int) -> Self
+pub fn Money::negate(Self) -> Self
 pub fn Money::percent_bp(Self, Int) -> Self
+pub fn Money::round_to(Self, Int, RoundingMode) -> Self
 pub fn Money::scale_bp(Self, Int) -> Self
 pub fn Money::sub(Self, Self) -> Self
 pub fn Money::to_string(Self) -> String
 pub fn Money::yuan(Int) -> Self
 pub fn Money::zero() -> Self
+
+pub struct OperationalRate {
+  code : String
+  zone : String
+  minimum_g : Int
+  maximum_g : Int
+  rate : Money
+  multiplier_bp : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn OperationalRate::contains(Self, Int) -> Bool
+pub fn OperationalRate::is_valid(Self) -> Bool
+pub fn OperationalRate::span(Self) -> Int
 
 pub struct ParcelDim {
   width_cm : Int
@@ -90,8 +177,22 @@ pub struct ParcelDim {
   depth_cm : Int
   weight_g : Int
 } derive(Eq, ToJson, @debug.Debug)
+pub fn ParcelDim::chargeable_volume_l(Self) -> Int
+pub fn ParcelDim::dimensional_density(Self) -> Int
+pub fn ParcelDim::is_valid(Self) -> Bool
 pub fn ParcelDim::longest_side_cm(Self) -> Int
+pub fn ParcelDim::normalized(Self) -> Self
 pub fn ParcelDim::volume_cm3(Self) -> Int
+
+pub struct ParcelProfile {
+  longest_side_cm : Int
+  shortest_side_cm : Int
+  middle_side_cm : Int
+  girth_cm : Int
+  footprint_cm2 : Int
+  surface_area_cm2 : Int
+  density_g_per_l : Int
+} derive(Eq, ToJson, @debug.Debug)
 
 pub struct Quote {
   billable_weight_g : Int
@@ -102,6 +203,13 @@ pub struct Quote {
   lines : Array[ChargeLine]
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Quote::summary(Self) -> String
+
+pub(all) enum RoundingMode {
+  HalfUp
+  HalfDown
+  Floor
+  Ceiling
+} derive(Eq, ToJson, @debug.Debug)
 
 pub enum RuleProblem {
   NonPositiveDivisor
@@ -120,6 +228,20 @@ pub struct SurchargePolicy {
   insurance_percent_bp : Int
 } derive(Eq, ToJson, @debug.Debug)
 
+pub struct TaxPolicy {
+  rate_bp : Int
+  threshold : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TaxPolicy::valid(Self) -> Bool
+
+pub struct TaxResult {
+  taxable : Money
+  exempt : Money
+  tax : Money
+  gross : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TaxResult::net_of_tax(Self) -> Money
+
 pub struct ZoneRate {
   zone : String
   multiplier_bp : Int
@@ -129,4 +251,3 @@ pub struct ZoneRate {
 // Type aliases
 
 // Traits
-
