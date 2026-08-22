@@ -6,17 +6,43 @@ import {
 }
 
 // Values
+pub fn add_business_days(BusinessCalendar, Int, Int) -> Int
+
+pub fn allocate_payment(Invoice, String, Money) -> PaymentAllocation
+
 pub fn analyze_parcel(ParcelDim) -> ParcelProfile
 
 pub fn apply_discounts(Money, Array[DiscountRule]) -> DiscountResult
+
+pub fn audit_event(Int, String, String, Money) -> AuditEvent
+
+pub fn audit_policy_score(ParcelDim, BillingRule, Money) -> Int
 
 pub fn billable_weight_g(ParcelDim, Int) -> Int
 
 pub fn billing_rule(volumetric_divisor~ : Int, first_weight_limit_g~ : Int, first_weight_rate~ : Money, additional_weight_unit_g~ : Int, additional_weight_rate~ : Money, min_charge~ : Money, zones~ : Array[ZoneRate], surcharge~ : SurchargePolicy) -> BillingRule
 
+pub fn bulk_job(String, Int) -> BulkJob
+
+pub fn bulk_policy_score(ParcelDim, BillingRule, Money) -> Int
+
+pub fn business_calendar(Array[Int], Array[Int], Int) -> BusinessCalendar
+
+pub fn calculate_customs(Array[CustomsLine]) -> CustomsSummary
+
 pub fn calculate_tax(TaxPolicy, Money, Money) -> TaxResult
 
+pub fn choose_tariff(Array[TariffCandidate], ParcelDim, String, Money, Int) -> DecisionTrace
+
 pub fn combine_discount_rules(Array[Array[DiscountRule]]) -> Array[DiscountRule]
+
+pub fn customs_duty(CustomsLine) -> Money
+
+pub fn customs_insurance(CustomsLine) -> Money
+
+pub fn customs_line(String, Money, Int, Int) -> CustomsLine
+
+pub fn customs_policy_score(ParcelDim, BillingRule, Money) -> Int
 
 pub fn describe_line(ChargeLine) -> String
 
@@ -28,23 +54,65 @@ pub fn find_operational_rate(Array[OperationalRate], Int) -> OperationalRate
 
 pub fn international_rate_catalog() -> Array[OperationalRate]
 
+pub fn invoice(String, Array[SettlementLine], Money, Money) -> Invoice
+
+pub fn invoice_balance(Invoice) -> (BalanceState, Money)
+
+pub fn invoice_outstanding(Invoice) -> Money
+
+pub fn invoice_subtotal(Invoice) -> Money
+
+pub fn invoice_total(Invoice) -> Money
+
+pub fn is_business_day(BusinessCalendar, Int) -> Bool
+
+pub fn job_after_failure(BulkJob, Int, Bool) -> BulkJob
+
+pub fn job_after_success(BulkJob, Int) -> BulkJob
+
 pub fn lane(origin~ : String, destination~ : String, zone~ : String, transit_days~ : Int) -> Lane
 
+pub fn operations_policy_score(ParcelDim, BillingRule, Money) -> Int
+
 pub fn parcel_dim(width_cm~ : Int, height_cm~ : Int, depth_cm~ : Int, weight_g~ : Int) -> ParcelDim
+
+pub fn pricing_policy_score(ParcelDim, BillingRule, Money) -> Int
 
 pub fn quote(BillingRule, ParcelDim, String, Money) -> Quote
 
 pub fn quote_manifest(BillingRule, Array[ManifestItem]) -> ManifestQuote
 
+pub fn reconcile_lines(Array[SettlementLine], Array[SettlementLine], Money) -> ReconciliationReport
+
+pub fn reconcile_policy_score(ParcelDim, BillingRule, Money) -> Int
+
 pub fn regional_rate_catalog() -> Array[OperationalRate]
+
+pub fn report_policy_score(ParcelDim, BillingRule, Money) -> Int
 
 pub fn resolve_lane(Array[Lane], String, String) -> Lane
 
 pub fn returns_rate_catalog() -> Array[OperationalRate]
 
+pub fn route_leg(String, String, String, Int, Int) -> RouteLeg
+
+pub fn routing_policy_score(ParcelDim, BillingRule, Money) -> Int
+
 pub fn sample_manifest() -> Array[ManifestItem]
 
 pub fn select_fastest_lane(Array[Lane], String, String) -> Lane
+
+pub fn service_deadline(BusinessCalendar, Int, Int, Int, Int) -> Int
+
+pub fn service_policy_score(ParcelDim, BillingRule, Money) -> Int
+
+pub fn service_window(String, Int, Int, Int) -> ServiceWindow
+
+pub fn settlement_line(String, Money, Bool) -> SettlementLine
+
+pub fn settlement_policy_score(ParcelDim, BillingRule, Money) -> Int
+
+pub fn sla_policy_score(ParcelDim, BillingRule, Money) -> Int
 
 pub fn standard_rule() -> BillingRule
 
@@ -52,7 +120,13 @@ pub fn summarize_manifest(Array[ParcelDim]) -> ManifestSummary
 
 pub fn surcharge_policy(overweight_limit_g~ : Int, overweight_fee~ : Money, oversize_limit_cm~ : Int, oversize_fee~ : Money, fuel_percent_bp~ : Int, insurance_percent_bp~ : Int) -> SurchargePolicy
 
+pub fn tariff_candidate(String, Int, Int, Int, Array[TariffPredicate], Money) -> TariffCandidate
+
+pub fn tariff_policy_score(ParcelDim, BillingRule, Money) -> Int
+
 pub fn tax_policy(rate_bp~ : Int, threshold~ : Money) -> TaxPolicy
+
+pub fn validate_configuration(Array[String]) -> ValidationSummary
 
 pub fn validate_rule(BillingRule) -> Array[RuleProblem]
 
@@ -63,6 +137,21 @@ pub fn zone_rate(zone~ : String, multiplier_bp~ : Int, remote_fee~ : Money) -> Z
 // Errors
 
 // Types and methods
+pub struct AuditEvent {
+  sequence : Int
+  code : String
+  detail : String
+  amount : Money
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) enum BalanceState {
+  Unpaid
+  PartiallyPaid
+  Paid
+  Overpaid
+} derive(Eq, ToJson, @debug.Debug)
+pub fn BalanceState::is_terminal(Self) -> Bool
+
 pub struct BillingRule {
   volumetric_divisor : Int
   first_weight_limit_g : Int
@@ -75,6 +164,28 @@ pub struct BillingRule {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn BillingRule::zone_rate(Self, String) -> ZoneRate
 
+pub struct BulkJob {
+  id : String
+  state : JobState
+  item_count : Int
+  completed : Int
+  failed : Int
+  attempts : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn BulkJob::is_terminal(Self) -> Bool
+pub fn BulkJob::progress_bp(Self) -> Int
+pub fn BulkJob::remaining(Self) -> Int
+
+pub struct BusinessCalendar {
+  weekend_days : Array[Int]
+  holidays : Array[Int]
+  cutoff_hour : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn BusinessCalendar::holiday_count(Self) -> Int
+pub fn BusinessCalendar::is_valid(Self) -> Bool
+pub fn BusinessCalendar::weekend_count(Self) -> Int
+pub fn BusinessCalendar::working_days_between(Self, Int, Int) -> Int
+
 pub enum ChargeLine {
   Base(weight_g~ : Int, Money)
   Additional(units~ : Int, Money)
@@ -85,6 +196,48 @@ pub enum ChargeLine {
   Fuel(percent_bp~ : Int, Money)
   Insurance(percent_bp~ : Int, declared_value~ : Money, Money)
   Minimum(Money)
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct ConfigDiagnostic {
+  code : String
+  severity : DiagnosticSeverity
+  field : String
+  message : String
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ConfigDiagnostic::is_blocking(Self) -> Bool
+pub fn ConfigDiagnostic::summary(Self) -> String
+
+pub struct CustomsLine {
+  code : String
+  declared_value : Money
+  duty_bp : Int
+  insurance_bp : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn CustomsLine::is_valid(Self) -> Bool
+
+pub struct CustomsSummary {
+  declared_value : Money
+  duty : Money
+  insurance : Money
+  total : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn CustomsSummary::effective_duty_bp(Self) -> Int
+pub fn CustomsSummary::is_empty(Self) -> Bool
+
+pub struct DecisionTrace {
+  selected : String
+  considered : Int
+  rejected : Array[String]
+  reasons : Array[String]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn DecisionTrace::explanation(Self) -> String
+pub fn DecisionTrace::has_selection(Self) -> Bool
+pub fn DecisionTrace::rejection_count(Self) -> Int
+
+pub enum DiagnosticSeverity {
+  Info
+  Warning
+  Error
 } derive(Eq, ToJson, @debug.Debug)
 
 pub struct DiscountResult {
@@ -101,6 +254,24 @@ pub struct DiscountRule {
   cap : Money
 } derive(Eq, ToJson, @debug.Debug)
 pub fn DiscountRule::valid(Self) -> Bool
+
+pub struct Invoice {
+  id : String
+  lines : Array[SettlementLine]
+  tax : Money
+  paid : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Invoice::is_closed(Self) -> Bool
+pub fn Invoice::line_count(Self) -> Int
+pub fn Invoice::taxable_subtotal(Self) -> Money
+
+pub(all) enum JobState {
+  Queued
+  Running
+  Succeeded
+  Failed
+  Retrying
+} derive(Eq, ToJson, @debug.Debug)
 
 pub struct Lane {
   origin : String
@@ -194,6 +365,14 @@ pub struct ParcelProfile {
   density_g_per_l : Int
 } derive(Eq, ToJson, @debug.Debug)
 
+pub struct PaymentAllocation {
+  payment_id : String
+  invoice_id : String
+  amount : Money
+  remaining : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn PaymentAllocation::fully_settles(Self) -> Bool
+
 pub struct Quote {
   billable_weight_g : Int
   actual_weight_g : Int
@@ -204,11 +383,44 @@ pub struct Quote {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Quote::summary(Self) -> String
 
+pub struct ReconciliationItem {
+  code : String
+  expected : Money
+  actual : Money
+  difference : Money
+  status : ReconciliationStatus
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct ReconciliationReport {
+  items : Array[ReconciliationItem]
+  matched : Int
+  exceptions : Int
+  net_difference : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ReconciliationReport::absolute_difference(Self) -> Money
+pub fn ReconciliationReport::is_matched(Self) -> Bool
+pub fn ReconciliationReport::item_count(Self) -> Int
+
+pub(all) enum ReconciliationStatus {
+  Matched
+  Difference
+  MissingExpected
+  UnexpectedActual
+} derive(Eq, ToJson, @debug.Debug)
+
 pub(all) enum RoundingMode {
   HalfUp
   HalfDown
   Floor
   Ceiling
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct RouteLeg {
+  origin : String
+  destination : String
+  zone : String
+  days : Int
+  capacity_g : Int
 } derive(Eq, ToJson, @debug.Debug)
 
 pub enum RuleProblem {
@@ -219,6 +431,19 @@ pub enum RuleProblem {
   NegativeFee(String)
 } derive(Eq, ToJson, @debug.Debug)
 
+pub struct ServiceWindow {
+  service : String
+  minimum_days : Int
+  maximum_days : Int
+  cutoff_hour : Int
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct SettlementLine {
+  code : String
+  amount : Money
+  taxable : Bool
+} derive(Eq, ToJson, @debug.Debug)
+
 pub struct SurchargePolicy {
   overweight_limit_g : Int
   overweight_fee : Money
@@ -226,6 +451,25 @@ pub struct SurchargePolicy {
   oversize_fee : Money
   fuel_percent_bp : Int
   insurance_percent_bp : Int
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct TariffCandidate {
+  id : String
+  priority : Int
+  effective_from : Int
+  effective_to : Int
+  predicates : Array[TariffPredicate]
+  charge : Money
+} derive(Eq, ToJson, @debug.Debug)
+pub fn TariffCandidate::active_on(Self, Int) -> Bool
+pub fn TariffCandidate::is_well_formed(Self) -> Bool
+
+pub(all) enum TariffPredicate {
+  WeightAtLeast(Int)
+  WeightAtMost(Int)
+  LongestSideAtMost(Int)
+  ZoneIs(String)
+  DeclaredValueAtLeast(Money)
 } derive(Eq, ToJson, @debug.Debug)
 
 pub struct TaxPolicy {
@@ -241,6 +485,16 @@ pub struct TaxResult {
   gross : Money
 } derive(Eq, ToJson, @debug.Debug)
 pub fn TaxResult::net_of_tax(Self) -> Money
+
+pub struct ValidationSummary {
+  errors : Int
+  warnings : Int
+  infos : Int
+  diagnostics : Array[ConfigDiagnostic]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ValidationSummary::diagnostic_count(Self) -> Int
+pub fn ValidationSummary::has_warnings(Self) -> Bool
+pub fn ValidationSummary::is_valid(Self) -> Bool
 
 pub struct ZoneRate {
   zone : String

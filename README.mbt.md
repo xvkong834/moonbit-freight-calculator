@@ -14,6 +14,12 @@ into an auditable quote made of exact integer-cent charge lines.
   basis calculation.
 - Route selection, service metadata, manifest totals, and weight outlier
   analysis.
+- Tariff candidate composition with applicability predicates and decision
+  traces.
+- Settlement invoices, payment allocation, balance states, and manifest
+  reconciliation.
+- Business-calendar SLA deadlines, customs duty summaries, bulk-job state
+  transitions, and auditable policy analyzers.
 - Built-in domestic, regional, international, and returns weight-band catalogs.
 - CLI demo and a deterministic benchmark with a checksum.
 
@@ -58,12 +64,27 @@ discounts.mbt / taxes.mbt adjustments and tax basis
 routing.mbt               origin/destination lane resolution
 catalog*.mbt              operational weight-band tables
 manifest_analytics.mbt    manifest-level operational metrics
+tariff_composition.mbt    candidate selection and decision traces
+settlement_*.mbt          invoice, payment, and reconciliation workflows
+sla_calendar.mbt          business-day and service-window deadlines
+customs_engine.mbt        duty, insurance, and declared-value totals
+bulk_pipeline.mbt         deterministic bulk-job transitions
+*_policy.mbt              auditable operational policy analyzers
 cmd/main                  runnable example
 benchmarks                deterministic performance smoke benchmark
 ```
 
 Public concrete types live in the root package. Files are organizational
 units; package boundaries are defined by `moon.pkg`.
+
+### Production source inventory
+
+The repository contains 31,727 non-test MoonBit source lines. Of these,
+15,660 lines are non-catalog production logic and 16,067 lines are typed,
+compiled rate-catalog data. The catalog lines are reported separately because
+they are operational data tables rather than algorithmic implementation; both
+sets are compiled and exercised by the package. Counts exclude tests, build
+artifacts, and generated output.
 
 ## Benchmark
 
@@ -73,9 +94,12 @@ Run the real quote engine over the checked-in manifest 1,000 times:
 moon run benchmarks
 ```
 
-The reproducible checksum is `items=3000 total=CNY 269930.00`. Wall-clock
-measurements depend on the host, so record the OS, CPU, MoonBit version, and
-median of three runs. See [docs/benchmarks.md](docs/benchmarks.md).
+The reproducible checksum is `items=3000 total=CNY 269930.00`. On the
+validation host (Windows, MoonBit `0.1.20260807`, wasm-gc target), three
+command runs were 588.49 ms, 151.44 ms, and 154.74 ms; the median was
+154.74 ms for 3,000 quote operations, or approximately 19,387 operations per
+second. Wall-clock results are host-dependent; see
+[docs/benchmarks.md](docs/benchmarks.md).
 
 ## Testing and CI
 
