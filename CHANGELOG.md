@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Added coverage tests for every built-in operational rate catalog.
+
 ## Unreleased
 
 - Added operational weight-band catalogs for domestic, regional, international,
