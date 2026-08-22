@@ -1,29 +1,40 @@
-# Source inventory
+# MoonBit source inventory
 
-This inventory uses a conservative, reproducible count. It counts physical
-lines in tracked production `.mbt` files, excludes `_build`, `_probe_project`,
-files ending in `_test.mbt`, and generated `pkg.generated.mbti` files. It does
-not count README snippets, Markdown, YAML, or the proposal document.
+The final inventory is deliberately split between executable production logic
+and typed rate-catalog data. Catalog data is compiled and used by the package,
+but it is not presented as algorithmic implementation.
 
-As of 2026-08-22:
+| Class | Files | Lines |
+| --- | ---: | ---: |
+| Non-catalog production logic | 37 | 15,660 |
+| Typed rate-catalog data | 5 | 16,067 |
+| Non-test production total | 42 | 31,727 |
+| Test sources | 6 | 397 |
 
-```text
-root production MoonBit source: 16864 lines
-CLI production MoonBit source: 11 lines
-benchmark production MoonBit source: 20 lines
-production MoonBit source total: 16895 lines
-MoonBit test source: 229 lines
-```
+## Reproduction on PowerShell
 
-The 16,895-line production total is the measured repository state, not an
-estimate. The four checked-in operational rate catalogs are executable,
-typed data tables used by the public lookup API; they are included in the
-production total and are called out separately in the architecture docs.
-
-Re-run the count from the repository root with PowerShell:
+Run from the repository root:
 
 ```powershell
-$files = Get-ChildItem -Recurse -File -Filter *.mbt |
-  Where-Object { $_.FullName -notmatch '\\_build\\|\\_probe_project\\|_test\.mbt$' }
-($files | Get-Content | Measure-Object -Line).Lines
+$all = Get-ChildItem -Recurse -File -Filter '*.mbt' |
+  Where-Object { $_.FullName -notmatch '\\_build\\|\\_probe_project\\' }
+$prod = $all | Where-Object { $_.Name -notmatch '_test\.mbt$' }
+$catalog = $prod | Where-Object {
+  $_.Name -match '(^catalogs\.mbt$|_rate_catalog\.mbt$)'
+}
+$logic = $prod | Where-Object {
+  $_.Name -notmatch '(^catalogs\.mbt$|_rate_catalog\.mbt$)'
+}
+function Count-Lines($items) {
+  $n = 0
+  foreach ($item in $items) {
+    $n += [System.IO.File]::ReadAllLines($item.FullName).Count
+  }
+  return $n
+}
+Count-Lines $logic
+Count-Lines $catalog
 ```
+
+The command excludes build artifacts, probe projects, and test files. It does
+not exclude or hide any production `.mbt` file.

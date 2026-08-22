@@ -4,6 +4,15 @@ Typed, deterministic freight-rating primitives for MoonBit applications. The
 library turns parcel dimensions, weight, route, tariff bands, and surcharges
 into an auditable quote made of exact integer-cent charge lines.
 
+## Positioning and users
+
+This is an embeddable freight-rating component for logistics platforms,
+carrier integrations, warehouse tools, and MoonBit application developers who
+need deterministic parcel quotes. MoonBit is a good fit here because the
+domain model is strongly typed, money is represented as exact integer cents,
+and the same checked code is validated across wasm, wasm-gc, JavaScript, and
+native targets.
+
 ## Core capabilities
 
 - Actual-versus-dimensional weight using configurable divisors.
@@ -122,3 +131,9 @@ native test target.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Maintenance
+
+Public behavior is covered by executable tests and the generated interface is
+checked into the repository. Changes are recorded in [CHANGELOG.md](CHANGELOG.md)
+and released through the Mooncakes package identified in `moon.mod`.
