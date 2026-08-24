@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  MOONBIT_INSTALL_VERSION: v0.10.9+6e6c44045
+
 jobs:
   check:
     name: MoonBit (${{ matrix.os }})

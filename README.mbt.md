@@ -28,7 +28,7 @@ native targets.
 - Settlement invoices, payment allocation, balance states, and manifest
   reconciliation.
 - Business-calendar SLA deadlines, customs duty summaries, bulk-job state
-  transitions, and auditable policy analyzers.
+  transitions, manifest validation, audit chains, and service promises.
 - Built-in domestic, regional, international, and returns weight-band catalogs.
 - CLI demo and a deterministic benchmark with a checksum.
 
@@ -78,22 +78,16 @@ settlement_*.mbt          invoice, payment, and reconciliation workflows
 sla_calendar.mbt          business-day and service-window deadlines
 customs_engine.mbt        duty, insurance, and declared-value totals
 bulk_pipeline.mbt         deterministic bulk-job transitions
-*_policy.mbt              auditable operational policy analyzers
+route_planner.mbt         capacity-aware shortest-path planning
+manifest_validation.mbt  duplicate, value, weight, and zone checks
+audit_chain.mbt           tamper-evident event history
+service_promise.mbt       delivery promise and breach classification
 cmd/main                  runnable example
 benchmarks                deterministic performance smoke benchmark
 ```
 
 Public concrete types live in the root package. Files are organizational
 units; package boundaries are defined by `moon.pkg`.
-
-### Production source inventory
-
-The repository contains 31,727 non-test MoonBit source lines. Of these,
-15,660 lines are non-catalog production logic and 16,067 lines are typed,
-compiled rate-catalog data. The catalog lines are reported separately because
-they are operational data tables rather than algorithmic implementation; both
-sets are compiled and exercised by the package. Counts exclude tests, build
-artifacts, and generated output.
 
 ## Benchmark
 
@@ -104,10 +98,11 @@ moon run benchmarks
 ```
 
 The reproducible checksum is `items=3000 total=CNY 269930.00`. On the
-validation host (Windows, MoonBit `0.1.20260807`, wasm-gc target), three
-command runs were 588.49 ms, 151.44 ms, and 154.74 ms; the median was
-154.74 ms for 3,000 quote operations, or approximately 19,387 operations per
-second. Wall-clock results are host-dependent; see
+validation host (Windows, MoonBit `0.1.20260819`, moonc
+`v0.10.9+6e6c44045`, wasm-gc target), three command runs were 194.29 ms,
+177.00 ms, and 163.36 ms; the median was 177.00 ms for 3,000 quote
+operations, or approximately 16,949 operations per second. Wall-clock
+results are host-dependent; see
 [docs/benchmarks.md](docs/benchmarks.md).
 
 ## Testing and CI
@@ -124,9 +119,9 @@ moon coverage report -f summary
 ```
 
 GitHub Actions runs the same quality gates on Ubuntu, macOS, and Windows. It
-installs the current stable MoonBit toolchain, checks all backends, verifies
-formatting and generated interfaces, runs tests with coverage, and executes the
-native test target.
+pins the stable MoonBit toolchain to `v0.10.9+6e6c44045`, checks all backends,
+verifies formatting and generated interfaces, runs tests with coverage, and
+executes the native test target.
 
 ## License
 

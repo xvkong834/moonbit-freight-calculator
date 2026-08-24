@@ -90,26 +90,83 @@ test "domain factories preserve operational records" {
 }
 
 ///|
-test "policy analyzers are deterministic and executable" {
-  let parcel = parcel_dim(width_cm=10, height_cm=12, depth_cm=8, weight_g=3200)
-  let rule = standard_rule()
-  let value = Money::yuan(100)
-  let scores = [
-    tariff_policy_score(parcel, rule, value),
-    settlement_policy_score(parcel, rule, value),
-    sla_policy_score(parcel, rule, value),
-    routing_policy_score(parcel, rule, value),
-    customs_policy_score(parcel, rule, value),
-    reconcile_policy_score(parcel, rule, value),
-    bulk_policy_score(parcel, rule, value),
-    audit_policy_score(parcel, rule, value),
-    report_policy_score(parcel, rule, value),
-    service_policy_score(parcel, rule, value),
-    pricing_policy_score(parcel, rule, value),
-    operations_policy_score(parcel, rule, value),
+test "route planner chooses the shortest feasible path" {
+  let edges = [
+    route_edge("A", "B", 10, 1, 1000, "local"),
+    route_edge("B", "D", 10, 1, 1000, "regional"),
+    route_edge("A", "C", 4, 3, 1000, "remote"),
+    route_edge("C", "D", 4, 3, 1000, "remote"),
   ]
-  for score in scores {
-    assert_true(score >= 0)
-  }
-  assert_eq(scores[0], tariff_policy_score(parcel, rule, value))
+  let plan = plan_route(edges, "A", "D", 3, 500)
+  debug_inspect(plan.nodes, content="[\"A\", \"C\", \"D\"]")
+  inspect(plan.distance_km, content="8")
+  inspect(plan.transit_days, content="6")
+}
+
+///|
+test "invoice aging assigns an open balance to one bucket" {
+  let invoice = invoice(
+    "INV-AGE",
+    [settlement_line("base", Money::yuan(100), true)],
+    Money::yuan(6),
+    Money::yuan(20),
+  )
+  let buckets = invoice_aging(invoice, 10, 25)
+  inspect(buckets[2].amount.cents, content="8600")
+}
+
+///|
+test "manifest validation reports duplicate and invalid records" {
+  let items = [
+    manifest_item(
+      "T-1",
+      "local",
+      parcel_dim(width_cm=10, height_cm=10, depth_cm=10, weight_g=1000),
+      Money::yuan(20),
+    ),
+    manifest_item(
+      "T-1",
+      "local",
+      parcel_dim(width_cm=10, height_cm=10, depth_cm=10, weight_g=-1),
+      Money::yuan(-1),
+    ),
+  ]
+  let report = validate_manifest(items)
+  assert_true(!report.valid)
+  inspect(report.issues.length(), content="3")
+}
+
+///|
+test "customs assessment distinguishes restricted goods" {
+  let restricted = customs_document(
+    "8517",
+    "radio transmitter",
+    Money::yuan(200),
+    "CN",
+    true,
+  )
+  let result = assess_customs(restricted, 600)
+  debug_inspect(result.decision, content="Reject")
+  inspect(result.duty.cents, content="1200")
+}
+
+///|
+test "audit chain detects tampering" {
+  let chain = audit_chain()
+  let next = append_audit_event(
+    chain,
+    audit_event(1, "QUOTE_CREATED", "INV-1", Money::yuan(12)),
+  )
+  assert_true(audit_chain_is_consistent(next))
+  assert_true(
+    !audit_chain_is_consistent(audit_chain_with_digest(next, next.digest + 1)),
+  )
+}
+
+///|
+test "service promise classifies delivery risk" {
+  let calendar = business_calendar([0, 6], [], 17)
+  let promise = make_service_promise(calendar, 1, 16, 2, 1, 5)
+  debug_inspect(promise.status, content="Breached")
+  inspect(promise.latest_day, content="4")
 }
